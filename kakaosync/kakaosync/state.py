@@ -2,7 +2,7 @@ import os
 
 import openai
 import reflex as rx
-from webui.kakaosync_chatbot import KakaoSyncChatBot
+from kakaosync.kakaosync_chatbot import KakaoSyncChatBot
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 openai.api_base = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")

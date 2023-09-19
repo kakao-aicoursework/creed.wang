@@ -1,7 +1,7 @@
 import reflex as rx
 
-from webui import styles
-from webui.state import State
+from kakaosync import styles
+from kakaosync.state import State
 
 
 def sidebar_chat(chat: str) -> rx.Component:

@@ -2,9 +2,11 @@ import os
 
 import openai
 import reflex as rx
+from webui.kakaosync_chatbot import KakaoSyncChatBot
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
-openai.api_base = os.getenv("OPENAI_API_BASE","https://api.openai.com/v1")
+openai.api_base = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
+kakaosync_chatbot = KakaoSyncChatBot()
 
 
 class QA(rx.Base):
@@ -103,36 +105,42 @@ class State(rx.State):
         yield
 
         # Build the messages.
-        messages = [
-            { "role": "system", "content": "You are a friendly chatbot named Reflex."}
-        ]
+        messages = [{
+            "role": "system",
+            "content": ("너는 아래 카카오싱크에 대한 소개 문서를 기반으로 "
+                        "카카오싱크에 대한 질문에 대답하는 assistant야.\n"
+                        "카카오싱크와 관련없는 질문에는 대답하지 마\n"
+                        "---\n")
+        }]
 
         for qa in self.chats[self.current_chat][1:]:
-            messages.append({ "role": "user", "content": qa.question})
-            messages.append({ "role": "assistant", "content": qa.answer})
+            messages.append({"role": "user", "content": qa.question})
+            messages.append({"role": "assistant", "content": qa.answer})
 
-        messages.append({ "role": "user", "content": self.question})
+        messages.append({"role": "user", "content": self.question})
 
         # Start a new session to answer the question.
-        session = openai.ChatCompletion.create(
-            model=os.getenv("OPENAI_MODEL","gpt-3.5-turbo"),
-            messages=messages,
-            # max_tokens=50,
-            # n=1,
-            stop=None,
-            temperature=0.7,
-            stream=True,  # Enable streaming
-        )
-        qa = QA(question=self.question, answer="")
+        # session = openai.ChatCompletion.create(
+        #     model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
+        #     messages=messages,
+        #     # max_tokens=50,
+        #     # n=1,
+        #     stop=None,
+        #     temperature=0.7,
+        #     stream=True,  # Enable streaming
+        # )
+
+        answer = kakaosync_chatbot.ask_question(self.question)
+        qa = QA(question=self.question, answer=answer)
         self.chats[self.current_chat].append(qa)
 
         # Stream the results, yielding after every word.
-        for item in session:
-            if hasattr(item.choices[0].delta, "content"):
-                answer_text = item.choices[0].delta.content
-                self.chats[self.current_chat][-1].answer += answer_text
-                self.chats = self.chats
-                yield
+        # for item in session:
+        #     if hasattr(item.choices[0].delta, "content"):
+        #         answer_text = item.choices[0].delta.content
+        #         self.chats[self.current_chat][-1].answer += answer_text
+        #         self.chats = self.chats
+        #         yield
 
         # Toggle the processing flag.
         self.processing = False

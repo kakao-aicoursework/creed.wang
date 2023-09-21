@@ -19,32 +19,31 @@ class KakaoSyncChatBot:
     """
     def __init__(self, db: VectorStore):
         self.db = db
-        self.question_llm = ChatOpenAI(temperature=0, verbose=True)
         self.memory = ConversationBufferMemory(
-            llm=self.question_llm,
             memory_key="chat_history",
             return_messages=True
         )
 
     async def ask_question(self, question):
-        self.callback = AsyncIteratorCallbackHandler()
+        callback_handler = AsyncIteratorCallbackHandler()
+        question_llm = ChatOpenAI(temperature=0, verbose=True)
         streaming_llm = ChatOpenAI(
             model="gpt-3.5-turbo",
             streaming=True,
-            callbacks=[self.callback],
+            callbacks=[callback_handler],
             temperature=0
         )
         self.conversation = ConversationalRetrievalChain.from_llm(
             llm=streaming_llm,
             retriever=self.db.as_retriever(),
-            condense_question_llm=self.question_llm,
+            condense_question_llm=question_llm,
             memory=self.memory,
             verbose=True
         )
         task = asyncio.create_task(
-            self._aask_question(question, self.callback.done),
+            self._aask_question(question, callback_handler.done),
         )
-        async for token in self.callback.aiter():
+        async for token in callback_handler.aiter():
             yield token
         await task
 

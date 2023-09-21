@@ -2,11 +2,13 @@ import os
 
 import openai
 import reflex as rx
+
 from kakaosync.kakaosync_chatbot import KakaoSyncChatBot
+from kakaosync.vectordb import vectordb
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 openai.api_base = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
-kakaosync_chatbot = KakaoSyncChatBot()
+kakaosync_chatbot = KakaoSyncChatBot(vectordb)
 
 
 class QA(rx.Base):

@@ -1,2 +1,6 @@
-reflex>=0.2.0
-openai
+reflex==0.2.7
+openai==0.28.0
+langchain==0.0.294
+
+# upload vector db
+chroma==0.4.10
